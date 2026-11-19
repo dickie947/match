@@ -268,7 +268,7 @@ function setState(t){$("state").textContent=t}
 function sizeFor(w){var n=w.length;return n<=6?36:n<=9?30:n<=12?24:n<=16?20:n<=24?18:n<=36?16:15}
 
 function fillPairs(){
-  var max=Math.max(2,Math.min(entries.length,24)),opts=[4,6,8,10,12,15,20].filter(function(v){return v<=max});
+  var max=Math.max(2,Math.min(entries.length,30)),opts=[4,6,8,10,12,15,20].filter(function(v){return v<=max});
   if(opts.indexOf(max)<0)opts.push(max);
   opts.sort(function(a,b){return a-b});
   if(opts.indexOf(cfg.pairs)<0)cfg.pairs=Math.min(max,8)>=opts[0]?opts.filter(function(v){return v<=Math.min(max,8)}).pop()||opts[0]:opts[0];
