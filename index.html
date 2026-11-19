@@ -166,7 +166,7 @@ dialog textarea{width:100%;min-height:240px;background:var(--bg);color:var(--fg)
 <dialog id="dlg">
   <div class="in">
     <h2>Word list</h2>
-    <p>One entry per line. A single word makes two identical cards. Two words separated by a comma make a pair of different cards, for example a word and its translation.</p>
+    <p>One entry per line. A single word makes two identical cards. Two words separated by a comma make a pair of different cards, for example a word and its translation. Start a line with ! to include that entry in every game.</p>
     <textarea id="ta" spellcheck="false" aria-label="Word list"></textarea>
     <div class="bar2">
       <button type="button" class="btn danger" id="dSave">Save &amp; new game</button>
@@ -206,7 +206,7 @@ function tick(){
 tick();setInterval(tick,1000);
 
 /* ---------- word list ---------- */
-var DEFAULT_LIST="Humility\nExcellence\nRespect\nKind\nYoung\nPositive\nGood\nOpportunity\nAgility\nFlexibility\nDiscipline\nLeadership\nAttack\nAggressive\nIntelligence\nSpeed\nIndirect approach\nDouble diamond\nHere to win\nGrit\nResilient\nRobust\nCompetent\nFirst to understand\nFirst to adapt\nFirst to overcome\nWhat is happening?\nWhat is likely to happen next?\nWhat do I actually need to do to win?\nWhat are my options now and where are the risks?";
+var DEFAULT_LIST="Humility\nExcellence\nRespect\nKind\nYoung\nPositive\nGood\nOpportunity\nAgility\nFlexibility\nDiscipline\nLeadership\nAttack\nAggressive\nIntelligence\nSpeed\nIndirect approach\nDouble diamond\nHere to win\nGrit\nResilient\nRobust\nCompetent\nFirst to understand\nFirst to adapt\nFirst to overcome\n!Professional\nWhat is happening?\nWhat is likely to happen next?\nWhat do I actually need to do to win?\nWhat are my options now and where are the risks?";
 var listText=lsGet("match-list")||DEFAULT_LIST;
 
 /* each entry -> {a, b}: b equals a for a single word */
@@ -214,12 +214,13 @@ function parseList(text){
   var seen={},out=[];
   String(text).split(/\r?\n/).forEach(function(line){
     line=line.trim(); if(!line)return;
+    var pin=false; if(line.charAt(0)==="!"){pin=true;line=line.slice(1).trim(); if(!line)return}
     var a=line,b=line,m=/^([^,=]+)[,=](.+)$/.exec(line);
     if(m){a=m[1].trim();b=m[2].trim()}
     if(!a||!b)return;
     var key=(a+"|"+b).toLowerCase();
     if(seen[key])return; seen[key]=1;
-    out.push({a:a,b:b});
+    out.push({a:a,b:b,pin:pin});
   });
   return out;
 }
@@ -231,10 +232,11 @@ function shuffle(arr){
 function ekey(e){return (e.a+"|"+e.b).toLowerCase()}
 var bag=[];try{bag=JSON.parse(lsGet("match-bag")||"[]")||[]}catch(e){bag=[]}
 function drawWords(entries,n){
-  var map={};entries.forEach(function(e){map[ekey(e)]=e});
+  var pins=entries.filter(function(e){return e.pin}).slice(0,n);
+  var map={};entries.forEach(function(e){if(!e.pin)map[ekey(e)]=e});
   bag=bag.filter(function(k){return map[k]});
-  var picked=[];
-  while(picked.length<n){
+  var picked=[],need=n-pins.length;
+  while(picked.length<need){
     if(!bag.length){
       var chosen={};picked.forEach(function(k){chosen[k]=1});
       bag=shuffle(Object.keys(map).filter(function(k){return !chosen[k]}));
@@ -243,7 +245,7 @@ function drawWords(entries,n){
     picked.push(bag.shift());
   }
   lsSet("match-bag",JSON.stringify(bag));
-  return picked.map(function(k){return map[k]});
+  return pins.concat(picked.map(function(k){return map[k]}));
 }
 /* daily rounds: a round counts when the board is cleared */
 var DAILY_N=5;
